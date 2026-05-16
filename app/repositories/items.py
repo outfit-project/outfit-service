@@ -13,6 +13,6 @@ class ItemRepository:
             response = await client.get(
                 self._api,
                 headers={'Authorization': f'Bearer {token}'}
-            )
+           )
             response.raise_for_status()
             return response.json()

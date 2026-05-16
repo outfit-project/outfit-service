@@ -1,0 +1,41 @@
+services:
+  outfit-service:
+    build: .
+    container_name: outfit_api
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:26379/0
+    ports:
+      - "8003:8003"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - outfit-network
+    restart: on-failure
+
+  redis:
+    image: redis:7-alpine
+    container_name: outfit_redis
+    command: [ "redis-server", "--appendonly", "yes" ]
+    ports:
+      - "26379:6379"
+    volumes:
+      - redisdata_outfit:/data
+    networks:
+      - outfit-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redisdata_outfit:
+
+networks:
+  outfit-network:
+    driver: bridge
+  wardrobe-shared:
+    external: true
+    name: ${WARDROBE_DOCKER_NETWORK:-wardrobe-service_wardrobe-network}
