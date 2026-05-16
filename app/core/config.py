@@ -1,12 +1,12 @@
 import os
+from dataclasses import dataclass
 
-
+@dataclass
 class Config:
-    items_url: str = os.getenv("ITEMS_URL")
+    items_url: str = os.getenv("ITEMS_URL", "")
+    redis_url: str = os.getenv("REDIS_URL", "")
+    secret_key: str = os.getenv("SECRET_KEY", "")
+    algorithm: str = "HS256"
 
-    SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_EXPIRE_MIN: int = 15
-    REFRESH_EXPIRE_DAYS: int = 30
 
 settings = Config()
