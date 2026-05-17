@@ -4,7 +4,9 @@ services:
     container_name: outfit_api
     env_file: .env
     environment:
-      REDIS_URL: redis://redis:26379/0
+      # Inside Docker use service DNS names, not host ports from .env (localhost:8002).
+      ITEMS_URL: http://wardrobe-service:8000/items/
+      REDIS_URL: redis://outfit_redis:6379/0
     ports:
       - "8003:8003"
     depends_on:
@@ -12,6 +14,7 @@ services:
         condition: service_healthy
     networks:
       - outfit-network
+      - wardrobe-shared
     restart: on-failure
 
   redis:

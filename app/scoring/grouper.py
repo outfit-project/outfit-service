@@ -2,7 +2,7 @@ from itertools import product
 from app.schemas.items import ItemResponse
 
 CATEGORY_GROUPS = {
-    "top":       ["top", "shirt", "jacket", "hoodie", "sweater"],
+    "top":       ["top", "shirt", "jacket", "hoodie", "sweater", "outerwear"],
     "bottom":    ["bottom", "pants", "jeans", "skirt", "shorts"],
     "shoes":     ["shoes", "sneakers", "boots", "sandals"],
     "accessory": ["accessory", "bag", "hat", "scarf"],
@@ -34,6 +34,17 @@ class ItemGrouper:
         if accessory:
             return [c + [a] for c, a in product(with_shoes, accessory)]
         return with_shoes
+
+    def top_bottom_combinations(
+        self, grouped: dict[str, list[ItemResponse]]
+    ) -> list[list[ItemResponse]]:
+        tops = grouped.get("top", [])
+        bottoms = grouped.get("bottom", [])
+
+        if not tops or not bottoms:
+            return []
+
+        return [list(pair) for pair in product(tops, bottoms)]
 
     def _resolve_group(self, category: str) -> str | None:
         c = category.lower()

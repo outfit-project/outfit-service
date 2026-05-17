@@ -21,7 +21,7 @@ class OutfitService:
         parsed = ItemListResponse(**raw)
 
         grouped = self._grouper.group(parsed.items)
-        combos = self._grouper.combinations(grouped)
+        combos = self._grouper.top_bottom_combinations(grouped)
 
         if not combos:
             return []
@@ -29,10 +29,13 @@ class OutfitService:
         ranked = self._ranker.rank(combos)
         adjusted = await self._apply_counter(ranked)
 
-        top = adjusted[:top_n]
-        await self._increment_shown(top)
+        if not adjusted:
+            return []
 
-        return top
+        best = adjusted[0]
+        await self._increment_shown([best])
+
+        return best["items"]
 
     async def _apply_counter(self, ranked: list[dict]) -> list[dict]:
         for entry in ranked:
