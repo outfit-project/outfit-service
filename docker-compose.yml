@@ -4,7 +4,6 @@ services:
     container_name: outfit_api
     env_file: .env
     environment:
-      # Inside Docker use service DNS names, not host ports from .env (localhost:8002).
       ITEMS_URL: http://wardrobe-service:8000/items/
       REDIS_URL: redis://outfit_redis:6379/0
     ports:

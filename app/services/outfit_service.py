@@ -21,7 +21,7 @@ class OutfitService:
         parsed = ItemListResponse(**raw)
 
         grouped = self._grouper.group(parsed.items)
-        combos = self._grouper.top_bottom_combinations(grouped)
+        combos = self._grouper.outfit_combinations(grouped)
 
         if not combos:
             return []

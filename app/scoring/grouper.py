@@ -35,15 +35,18 @@ class ItemGrouper:
             return [c + [a] for c, a in product(with_shoes, accessory)]
         return with_shoes
 
-    def top_bottom_combinations(
+    def outfit_combinations(
         self, grouped: dict[str, list[ItemResponse]]
     ) -> list[list[ItemResponse]]:
         tops = grouped.get("top", [])
         bottoms = grouped.get("bottom", [])
+        shoes = grouped.get("shoes", [])
 
         if not tops or not bottoms:
             return []
 
+        if shoes:
+            return [list(triple) for triple in product(tops, bottoms, shoes)]
         return [list(pair) for pair in product(tops, bottoms)]
 
     def _resolve_group(self, category: str) -> str | None:
