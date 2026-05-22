@@ -4,7 +4,7 @@ services:
     container_name: outfit_api
     env_file:
       - .env
-      - ../../deploy.env
+      - ../deploy.env
     environment:
       ITEMS_URL: http://outfit_wardrobe_api:8000/items/
       REDIS_URL: redis://outfit_redis:6379/0
@@ -22,7 +22,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: outfit_redis
-    command: [ "redis-server", "--appendonly", "yes" ]
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "26379:6379"
     volumes:
@@ -30,7 +30,7 @@ services:
     networks:
       - outfit-network
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
