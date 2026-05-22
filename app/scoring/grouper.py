@@ -1,8 +1,10 @@
+import random
 from itertools import product
 from app.schemas.items import ItemResponse
 
 CATEGORY_GROUPS = {
-    "top":       ["top", "shirt", "jacket", "hoodie", "sweater", "outerwear"],
+    "top":       ["top", "shirt", "t-shirt", "blouse", "tank"],
+    "outer":     ["outer", "jacket", "coat", "hoodie", "cardigan", "blazer", "sweater"],
     "bottom":    ["bottom", "pants", "jeans", "skirt", "shorts"],
     "shoes":     ["shoes", "sneakers", "boots", "sandals"],
     "accessory": ["accessory", "bag", "hat", "scarf"],
@@ -38,16 +40,24 @@ class ItemGrouper:
     def outfit_combinations(
         self, grouped: dict[str, list[ItemResponse]]
     ) -> list[list[ItemResponse]]:
-        tops = grouped.get("top", [])
-        bottoms = grouped.get("bottom", [])
-        shoes = grouped.get("shoes", [])
+        base_tops = grouped.get("top", [])
+        outers    = grouped.get("outer", [])
+        bottoms   = grouped.get("bottom", [])
+        shoes     = grouped.get("shoes", [])
 
-        if not tops or not bottoms:
+        if not base_tops or not bottoms or not shoes:
             return []
 
-        if shoes:
-            return [list(triple) for triple in product(tops, bottoms, shoes)]
-        return [list(pair) for pair in product(tops, bottoms)]
+        combos: list[list[ItemResponse]] = []
+
+        for base_top, bottom, shoe in product(base_tops, bottoms, shoes):
+            if outers and random.random() < 0.5:
+                outer = random.choice(outers)
+                combos.append([base_top, outer, bottom, shoe])
+            else:
+                combos.append([base_top, bottom, shoe])
+
+        return combos
 
     def _resolve_group(self, category: str) -> str | None:
         c = category.lower()

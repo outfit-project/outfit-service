@@ -13,7 +13,8 @@ def _int_env(name: str, default: int) -> int:
 class Config:
     items_url: str = os.getenv("ITEMS_URL", "")
     cors_origins: str = os.getenv(
-        "CORS_ORIGINS", "http://localhost:5173,http://localhost:3000"
+        "CORS_ORIGINS",
+        "http://192.168.0.213,http://localhost:5173,http://localhost:3000",
     )
     redis_url: str = os.getenv("REDIS_URL", "")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")

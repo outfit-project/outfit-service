@@ -2,10 +2,13 @@ services:
   outfit-service:
     build: .
     container_name: outfit_api
-    env_file: .env
+    env_file:
+      - .env
+      - ../../deploy.env
     environment:
-      ITEMS_URL: http://wardrobe-service:8000/items/
+      ITEMS_URL: http://outfit_wardrobe_api:8000/items/
       REDIS_URL: redis://outfit_redis:6379/0
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://192.168.0.213,http://localhost:5173,http://localhost:3000}
     ports:
       - "8003:8003"
     depends_on:
