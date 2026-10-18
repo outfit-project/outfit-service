@@ -16,7 +16,7 @@ class OutfitService:
         self._ranker = ranker
         self._counter = counter
 
-    async def get_outfit(self, token: str, top_n: int = 5) -> list[dict]:
+    async def get_outfit(self, token: str, top_n: int = 5) -> dict:
         raw = await self._items.get_items(token)
         parsed = ItemListResponse(**raw)
 
@@ -24,18 +24,21 @@ class OutfitService:
         combos = self._grouper.outfit_combinations(grouped)
 
         if not combos:
-            return []
+            return {
+                "items": [], "score": None,
+                "message": "Add a top, a bottom and shoes, then wait until their photos are processed.",
+            }
 
-        ranked = self._ranker.rank(combos)
+        ranked = self._ranker.rank(combos)[:max(1, top_n)]
         adjusted = await self._apply_counter(ranked)
 
         if not adjusted:
-            return []
+            return {"items": [], "score": None, "message": "No compatible outfit is available yet."}
 
         best = adjusted[0]
         await self._increment_shown([best])
 
-        return best["items"]
+        return {"items": best["items"], "score": best["score"], "message": None}
 
     async def _apply_counter(self, ranked: list[dict]) -> list[dict]:
         for entry in ranked:

@@ -19,7 +19,7 @@ class OutfitRanker:
         if not pairs:
             return 0.0
         scores = [
-            self._scorer.score(a.embedding, b.embedding)
+            (self._scorer.score(a.embedding, b.embedding) + 1.0) / 2.0
             for a, b in pairs
             if a.embedding and b.embedding
         ]

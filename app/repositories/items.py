@@ -21,14 +21,10 @@ class ItemRepository:
                 )
                 response.raise_for_status()
                 return response.json()
-        except httpx.ConnectError as exc:
+        except httpx.RequestError as exc:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=(
-                    f"Cannot reach wardrobe at {self._api}. "
-                    "In Docker use http://wardrobe-service:8000/items/ "
-                    "and attach outfit-service to the wardrobe network."
-                ),
+                detail="Wardrobe is temporarily unavailable",
             ) from exc
         except httpx.HTTPStatusError as exc:
             raise HTTPException(
