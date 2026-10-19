@@ -2,7 +2,23 @@
 
 Builds one scored outfit from a user's processed wardrobe. This FastAPI service fetches items over HTTP and stores suggestion exposure counts in Redis; it owns no garment database and loads no ML model.
 
-[Project overview](../../README.md) · [Wardrobe API](../wardrobe-service/README.md) · [Model behavior](../ml-inference/README.md)
+[Wardrobe API](https://github.com/outfit-project/wardrobe-service) · [Model behavior](https://github.com/outfit-project/ml-inference) · [Run all services](https://github.com/outfit-project/api-gateway#run-all-repositories)
+
+## Start this repository
+
+Requirements: Docker with Compose 2.20+. From this repository:
+
+```bash
+cp .env.example .env
+docker network create vestis-services
+docker compose up --build -d --wait --wait-timeout 120
+```
+
+PowerShell also supports `cp`. Copy the example only for initial setup and preserve an existing `.env`. Create the network once; skip creation if it exists. `VESTIS_NETWORK` can name another pre-created network. Replace example secrets for deployment.
+
+Open `http://localhost:8003/docs`. Only outfit and its persistent history Redis start; no parent files or other checkouts are needed. `docker compose down` preserves history. Readiness works without wardrobe, but suggestions need the wardrobe API and an auth-issued JWT. A missing wardrobe returns 503.
+
+For integration, run wardrobe/auth on the same network, use the same `SECRET_KEY` in all three repositories, and keep `ITEMS_URL=http://outfit_wardrobe_api:8000/items/`. To use a remote wardrobe, set `ITEMS_URL` to its reachable URL. The outfit alias is `outfit_api:8003`.
 
 ## Selection and scoring
 
@@ -54,40 +70,38 @@ Invalid authentication returns 401 and invalid `top_n` returns 422. A missing `I
 
 Settings: [app/core/config.py](app/core/config.py). Unlike the Pydantic-based APIs, this configuration reads process environment variables and does not load a local `.env` itself.
 
-| Variable | Root Compose value / purpose |
+| Variable | Compose value / purpose |
 | --- | --- |
-| `ITEMS_URL` | `http://wardrobe:8000/items/`; owner item-list endpoint |
+| `ITEMS_URL` | `http://outfit_wardrobe_api:8000/items/`; owner item-list endpoint |
 | `REDIS_URL` | `redis://outfit-redis:6379/0`; exposure history |
 | `SECRET_KEY` | Same JWT secret as auth/wardrobe |
 | `ALGORITHM` | `HS256` |
-| `CORS_ORIGINS` | Comma-separated browser origins from root configuration |
+| `CORS_ORIGINS` | Defaults to localhost ports 3000, 5173 and 8080 |
 
 The wardrobe HTTP request has a 30-second timeout. Redis clients are closed at the end of each request. There are no migrations for this service.
 
 ## Run and health
 
-From the project root:
+From this repository:
 
 ```bash
-python scripts/setup.py
-docker compose up --build -d --wait --wait-timeout 900
+docker compose ps
 docker compose logs -f outfit
-curl http://localhost:8080/health/outfit
+curl http://localhost:8003/health/ready
 ```
 
 Uvicorn listens internally on port **8003**. `/health/live` checks the process and `/health/ready` checks Redis; readiness does not fetch wardrobe or validate inventory completeness. The gateway maps `/health/outfit` to readiness.
 
-For native development, export the settings above with host-reachable addresses, then run `uvicorn app.main:app --reload --port 8003` from this directory. Root Compose does not publish internal Redis/API ports.
+`OUTFIT_PORT` changes the direct host port (default 8003). For native development, export the settings above with host-reachable addresses, then run `uvicorn app.main:app --reload --port 8003` from this directory. Compose does not publish Redis to the host.
 
 ## Checks
 
-Use an isolated Python 3.12 environment. From the root:
+Use an isolated Python 3.12 environment, from this repository:
 
 ```bash
-python -m pip install -r backend/outfit-service/requirements.txt -r requirements-test.txt
-cd backend/outfit-service
+python -m pip install -r requirements-dev.txt
 python -m pytest -q
 python -m compileall -q app
 ```
 
-Tests cover ready filtering, required categories, outerwear, bounded generation, actual similarity scores, history rotation and empty inventories. A real integration check needs three processed garment photos; see the [root smoke commands](../../README.md#development-and-checks).
+Tests cover ready filtering, required categories, outerwear, bounded generation, actual similarity scores, history rotation and empty inventories. A real integration check needs processed top, bottom and shoe photos in wardrobe; call `/outfits/suggest` with their owner's auth token.

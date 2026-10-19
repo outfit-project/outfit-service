@@ -1,4 +1,44 @@
-name: vestis
-include:
-  - path: ../../docker-compose.yml
-    env_file: ../../.env
+name: vestis-outfit
+
+services:
+  outfit:
+    build: .
+    ports: ["127.0.0.1:${OUTFIT_PORT:-8003}:8003"]
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?Copy .env.example to .env and set the same SECRET_KEY as auth}
+      ALGORITHM: HS256
+      ITEMS_URL: ${ITEMS_URL:-http://outfit_wardrobe_api:8000/items/}
+      REDIS_URL: redis://outfit-redis:6379/0
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8080}
+    depends_on:
+      outfit-redis: {condition: service_healthy}
+    networks:
+      default:
+      vestis:
+        aliases: [outfit_api]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health/ready', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 6
+      start_period: 15s
+    restart: unless-stopped
+
+  outfit-redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, "yes"]
+    volumes: [outfit-redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+networks:
+  vestis:
+    external: true
+    name: ${VESTIS_NETWORK:-vestis-services}
+
+volumes:
+  outfit-redis-data:
